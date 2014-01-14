@@ -17,7 +17,7 @@ import struct
 import darm # https://github.com/jbremer/darm
 
 # Read RAM dump.
-f = open("DUMP.BIN")
+f = open("DUMP.BIN", "rb")
 dump = f.read()
 f.close()
 
