@@ -38,7 +38,7 @@ def main(argv):
 	
 	#hexdump(rop, base=0x2B0000)
 
-	with open(arv[0], "wb") as f:
+	with open(argv[0], "wb") as f:
 		f.write(rop)
 
 if __name__ == "__main__":
