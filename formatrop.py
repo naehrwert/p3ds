@@ -17,14 +17,14 @@ import struct
 import darm # https://github.com/jbremer/darm
 
 # Read RAM dump.
-f = open("DUMP.BIN", "rb")
-dump = f.read()
-f.close()
+dump = ""
+with open("DUMP.BIN", "rb") as f:
+    dump = f.read()
 
 # Read decrypted launcher.
-f = open("Launcher.dat", "rb")
-data = f.read()
-f.close()
+data = ""
+with open("Launcher.dat", "rb") as f:
+    data = f.read()
 
 # Format entries.
 for i in xrange(len(data)/4):
