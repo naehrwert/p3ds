@@ -21,7 +21,7 @@ from p3ds.ROP import *
 def main(argv):
 	r = ROP(0x002B0000)
 
-	# Clear 0x279004 and 0x279008
+	# Set file object u64 offset to 0
 	r.store_i32(0, 0x279004)
 	r.store_i32(0, 0x279008)
 
