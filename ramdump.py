@@ -21,7 +21,7 @@ from p3ds.ROP import *
 def main(argv):
 	r = ROP(0x002B0000)
 
-	# Clear 0x279004 and 0x279008
+	# Set file object u64 offset to 0
 	r.store_i32(0, 0x279004)
 	r.store_i32(0, 0x279008)
 
@@ -32,17 +32,14 @@ def main(argv):
 
 	# Data.
 	r.label("fname")
-	r.data(
-	"\x59\x00\x53\x00\x3A\x00\x2F\x00\x44\x00\x55\x00\x4D\x00\x50\x00"
-	"\x2E\x00\x42\x00\x49\x00\x4E\x00\x00\x00")
+	r.data("YS:/DUMP.BIN".encode('utf-16le') + "\x00\x00")
 
 	rop = r.gen()
 	
 	#hexdump(rop, base=0x2B0000)
 
-	f = open(argv[0], "wb")
-	f.write(rop)
-	f.close()
+	with open(arv[0], "wb") as f:
+		f.write(rop)
 
 if __name__ == "__main__":
 	main(sys.argv[1:])

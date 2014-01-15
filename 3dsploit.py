@@ -102,9 +102,8 @@ def main(argv):
 
 	#hexdump(rop, base=0x2B0000)
 
-	f = open(argv[0], "wb")
-	f.write(rop)
-	f.close()
+	with open(argv[0], "wb") as f:
+		f.write(rop)
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
